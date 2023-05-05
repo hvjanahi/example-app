@@ -1,0 +1,44 @@
+name: Laravel Envoy Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, pdo_mysql
+
+      - name: Install Composer
+        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+
+      - name: Configure Envoy File
+        run: |
+          sed -i "s#localhost#${{ secrets.SERVER_IP }}#g" Envoy.blade.php
+          sed -i "s#repo_url#${{ secrets.REPOSITORY_URL }}#g" Envoy.blade.php
+
+      - name: Laravel Envoy Deploy
+        run: php vendor/bin/envoy run deploy
+        env:
+          ENVOY_TASK: 'deploy'
+          ENVOY_CONNECTION: 'production'
