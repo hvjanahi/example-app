@@ -1,7 +1,6 @@
 @servers(['web' => 'ubuntu@localhost'])
 
 @setup
-    $ssh = "ssh -o StrictHostKeyChecking=no ubuntu@localhost";
     $repository = 'repo_url';
     $release_dir = '/var/www/html/' . date('Ymd-His');
     $release_path = '/var/www/html/';
@@ -37,7 +36,7 @@
 @endtask
 
 @task('deploy')
-    echo "Setting active deployment ..."
+    echo "Setting release ..."
     cd {{ $release_path }}
     rm -rf {{ $app_folder }}
     mv {{ $release_dir }} {{ $app_folder }}
